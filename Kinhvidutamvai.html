@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinh Ví dụ Tấm Vải: Lộ Trình Tương Tác</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony Neutrals -->
+    <!-- Application Structure Plan: Ứng dụng được cấu trúc thành các phần chuyên đề có thể điều hướng, thay vì một bản cuộn tuyến tính. Bắt đầu bằng 'Dụ Ngôn' cốt lõi để thiết lập tiền đề. Tiếp theo là 'Chẩn Đoán Tâm' với một lưới tương tác để khám phá từng cấu uế. Sau đó, 'Lộ Trình Thanh Lọc' được trình bày như một sơ đồ quy trình trực quan, có thể nhấp chuột, thể hiện sự tiến triển từ việc loại bỏ cấu uế đến thiền định. Phần 'Phép Rửa Đích Thực' sử dụng bố cục so sánh song song để làm nổi bật sự khác biệt giữa nghi lễ bên ngoài và sự thanh lọc bên trong. Cuối cùng, 'Minh Chứng' kết thúc câu chuyện bằng việc chuyển hóa của Bà-la-môn. Cấu trúc này được chọn để biến các khái niệm trừu tượng thành các mô-đun có thể khám phá, tăng cường sự tham gia và hiểu biết của người dùng. -->
+    <!-- Visualization & Content Choices: Dụ ngôn (So sánh): Bố cục HTML/CSS song song để so sánh trực quan. Cấu uế (Tổ chức/Thông báo): Lưới HTML tương tác, cập nhật nội dung bằng JS khi nhấp chuột để biến danh sách thành công cụ khám phá. Lộ trình (Thay đổi/Quy trình): Sơ đồ quy trình HTML/CSS, và biểu đồ Radar từ Chart.js cho Tứ Vô Lượng Tâm để thể hiện sự lan tỏa. Phép Rửa (So sánh): Bố cục hai cột đơn giản để đối chiếu rõ ràng. Minh Chứng (Thông báo): Khối văn bản rõ ràng để kết luận câu chuyện. Các lựa chọn này ưu tiên sự rõ ràng, tương tác và trình bày logic mà không cần đồ họa phức tạp. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #FDFDFB;
+            color: #3a3a3a;
+        }
+        .bg-cream { background-color: #FDFDFB; }
+        .bg-stone { background-color: #F5F5F4; }
+        .text-brown-dark { color: #5D4037; }
+        .text-brown-medium { color: #795548; }
+        .text-green-deep { color: #386641; }
+        .border-green-accent { border-color: #6A994E; }
+        .bg-green-accent { background-color: #A7C957; }
+        .bg-green-light-accent { background-color: #F2E8CF; }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #386641;
+            border-bottom-color: #6A994E;
+        }
+        .defilement-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .defilement-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #FDFDFB;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: scale(0.95);}
+            to {opacity: 1; transform: scale(1);}
+        }
+    </style>
+</head>
+<body class="bg-cream">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-green-deep">
+                <a href="#">Tấm Vải Của Tâm</a>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#parable" class="nav-link">Dụ Ngôn</a>
+                <a href="#defilements" class="nav-link">Cấu Uế</a>
+                <a href="#path" class="nav-link">Lộ Trình</a>
+                <a href="#cleansing" class="nav-link">Phép Rửa</a>
+                <a href="#proof" class="nav-link">Minh Chứng</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-2xl text-green-deep">☰</button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white py-2">
+            <a href="#parable" class="block text-center py-2 text-brown-dark hover:bg-stone">Dụ Ngôn</a>
+            <a href="#defilements" class="block text-center py-2 text-brown-dark hover:bg-stone">Cấu Uế</a>
+            <a href="#path" class="block text-center py-2 text-brown-dark hover:bg-stone">Lộ Trình</a>
+            <a href="#cleansing" class="block text-center py-2 text-brown-dark hover:bg-stone">Phép Rửa</a>
+            <a href="#proof" class="block text-center py-2 text-brown-dark hover:bg-stone">Minh Chứng</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <section id="parable" class="min-h-[80vh] flex items-center">
+            <div class="w-full">
+                <h1 class="text-4xl md:text-5xl font-bold text-center text-brown-dark mb-4">Dụ Ngôn Tấm Vải</h1>
+                <p class="text-center text-lg text-brown-medium max-w-3xl mx-auto mb-12">Bài kinh bắt đầu bằng một ẩn dụ nền tảng: trạng thái của tâm quyết định vận mệnh của chúng ta, giống như chất lượng của một tấm vải quyết định vẻ đẹp của màu nhuộm.</p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-stone p-8 rounded-xl shadow-lg border border-gray-200">
+                        <div class="text-center text-6xl mb-4">🌫️</div>
+                        <h2 class="text-2xl font-bold text-center text-brown-dark mb-3">Tâm Cấu Uế</h2>
+                        <p class="text-brown-medium text-center">"Như một tấm vải cấu uế, nhiễm bụi... sẽ được màu nhuộm không tốt đẹp, sẽ được màu nhuộm không sạch sẽ. Vì sao vậy? Vì tấm vải không được trong sạch."</p>
+                        <div class="mt-6 text-center text-xl font-semibold text-red-800 bg-red-100 p-4 rounded-lg">
+                            "Cũng vậy, cõi ác chờ đợi một tâm cấu uế."
+                        </div>
+                    </div>
+                    <div class="bg-green-light-accent p-8 rounded-xl shadow-lg border border-green-accent">
+                        <div class="text-center text-6xl mb-4">✨</div>
+                        <h2 class="text-2xl font-bold text-center text-green-deep mb-3">Tâm Thanh Tịnh</h2>
+                        <p class="text-green-deep text-center">"Như một tấm vải thanh tịnh, trong sạch... sẽ được màu nhuộm tốt đẹp, sẽ được màu nhuộm sạch sẽ. Vì sao vậy? Vì tấm vải được trong sạch."</p>
+                        <div class="mt-6 text-center text-xl font-semibold text-green-800 bg-green-200 p-4 rounded-lg">
+                            "Cũng vậy, cõi thiện chờ đợi một tâm không cấu uế."
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-20 border-gray-200">
+
+        <section id="defilements" class="py-16">
+            <h2 class="text-4xl font-bold text-center text-brown-dark mb-4">Chẩn Đoán Tâm: Các Cấu Uế</h2>
+            <p class="text-center text-lg text-brown-medium max-w-3xl mx-auto mb-12">Đức Phật đã liệt kê 16 loại "vết bẩn" làm ô uế tâm. Việc nhận diện chúng là bước đầu tiên để thanh lọc. Hãy nhấp vào từng cấu uế để hiểu rõ hơn.</p>
+            <div id="defilements-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+            </div>
+        </section>
+
+        <hr class="my-20 border-gray-200">
+
+        <section id="path" class="py-16">
+            <h2 class="text-4xl font-bold text-center text-brown-dark mb-4">Lộ Trình Thanh Lọc</h2>
+            <p class="text-center text-lg text-brown-medium max-w-3xl mx-auto mb-12">Đây không chỉ là một lý thuyết mà là một phương pháp có hệ thống, một tiến trình tuần tự dẫn dắt hành giả từ việc nhận diện cấu uế đến giải thoát hoàn toàn.</p>
+            
+            <div class="space-y-12">
+                <div class="text-center p-8 bg-stone rounded-xl shadow-md">
+                    <div class="text-3xl font-bold text-green-deep mb-2">Giai đoạn 1: Đoạn Trừ</div>
+                    <p class="text-brown-medium">Hành giả nhận biết và đoạn trừ từng cấu uế của tâm, bắt đầu từ tham dục đến phóng dật. "Sau khi biết vậy, vị ấy đoạn trừ... cấu uế của tâm." Đây là nền tảng của toàn bộ tiến trình.</p>
+                </div>
+
+                <div class="text-center text-4xl text-green-deep">↓</div>
+
+                <div class="text-center p-8 bg-stone rounded-xl shadow-md">
+                    <div class="text-3xl font-bold text-green-deep mb-2">Giai đoạn 2: Tín Thọ Bất Động</div>
+                    <p class="text-brown-medium">Khi các cấu uế được loại bỏ, một niềm tin vững chắc, dựa trên kinh nghiệm thực chứng, sẽ khởi sinh. Đây không phải là niềm tin mù quáng, mà là sự xác tín vào Tam Bảo (Phật, Pháp, Tăng).</p>
+                </div>
+                
+                <div class="text-center text-4xl text-green-deep">↓</div>
+
+                <div class="p-8 bg-stone rounded-xl shadow-md">
+                    <h3 class="text-3xl font-bold text-green-deep mb-4 text-center">Giai đoạn 3: Chuỗi Nhân Duyên Hỷ Lạc</h3>
+                    <p class="text-brown-medium text-center mb-8">Từ niềm tin, một chuỗi các trạng thái tâm tích cực phát sinh một cách tự nhiên, dẫn đến thiền định.</p>
+                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                        <div class="p-4 bg-white rounded-lg text-center">Tín Thọ</div>
+                        <div class="text-2xl text-green-deep">→</div>
+                        <div class="p-4 bg-white rounded-lg text-center">Hân Hoan</div>
+                        <div class="text-2xl text-green-deep">→</div>
+                        <div class="p-4 bg-white rounded-lg text-center">Hỷ</div>
+                        <div class="text-2xl text-green-deep">→</div>
+                        <div class="p-4 bg-white rounded-lg text-center">Khinh An</div>
+                         <div class="text-2xl text-green-deep">→</div>
+                        <div class="p-4 bg-white rounded-lg text-center">Lạc Thọ</div>
+                        <div class="text-2xl text-green-deep">→</div>
+                        <div class="p-4 bg-green-accent rounded-lg text-center font-bold">Tâm Định</div>
+                    </div>
+                </div>
+
+                <div class="text-center text-4xl text-green-deep">↓</div>
+
+                <div class="p-8 bg-stone rounded-xl shadow-md">
+                    <h3 class="text-3xl font-bold text-green-deep mb-4 text-center">Giai đoạn 4: Quả Vị Thanh Tịnh</h3>
+                    <p class="text-brown-medium text-center mb-8">Tâm đã được thanh lọc sẽ lan tỏa Tứ Vô Lượng Tâm: Từ, Bi, Hỷ, Xả. Nó trở nên "quảng đại, vô biên, không hận, không sân", bao trùm khắp thế gian.</p>
+                    <div class="chart-container">
+                        <canvas id="fourImmeasurablesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-20 border-gray-200">
+
+        <section id="cleansing" class="py-16">
+            <h2 class="text-4xl font-bold text-center text-brown-dark mb-4">Phép Rửa Đích Thực</h2>
+            <p class="text-center text-lg text-brown-medium max-w-3xl mx-auto mb-12">Cuộc đối thoại với Bà-la-môn Sundarika Bharadvaja đã làm rõ sự khác biệt giữa nghi lễ bên ngoài và sự thanh tẩy bên trong.</p>
+            <div class="grid md:grid-cols-2 gap-8 mt-8">
+                <div class="border-2 border-dashed border-gray-400 p-8 rounded-xl">
+                    <h3 class="text-2xl font-bold text-center text-brown-dark mb-4">Quan Niệm Phổ Thông: Tắm Sông</h3>
+                    <p class="text-brown-medium">Vị Bà-la-môn tin rằng tắm ở các sông thiêng như Bahuka có thể "gội sạch các ác nghiệp". Đây là sự nương tựa vào các yếu tố bên ngoài.</p>
+                    <div class="mt-6 text-center">
+                        <p class="text-lg font-mono p-4 bg-gray-100 rounded-lg">"Kẻ ngu dầu thường tắm,<br>Ác nghiệp không rửa sạch."</p>
+                    </div>
+                </div>
+                <div class="border-2 border-solid border-green-accent bg-green-light-accent p-8 rounded-xl">
+                     <h3 class="text-2xl font-bold text-center text-green-deep mb-4">Chánh Pháp: Tắm Rửa Nội Tâm</h3>
+                    <p class="text-green-deep">Đức Phật khẳng định phép rửa đích thực nằm trong chính hành vi đạo đức của mỗi người. Sự thanh tịnh đến từ bên trong.</p>
+                     <div class="mt-6 text-center">
+                        <p class="text-lg font-mono p-4 bg-green-200 rounded-lg">"Nếu không nói dối trá,<br>Nếu không hại chúng sanh..."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-20 border-gray-200">
+
+        <section id="proof" class="py-16">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-4xl font-bold text-brown-dark mb-4">Minh Chứng Sống Động</h2>
+                <p class="text-lg text-brown-medium mb-8">Câu chuyện không kết thúc bằng lý thuyết. Chính vị Bà-la-môn, sau khi nghe pháp, đã trở thành minh chứng cho hiệu quả của con đường này.</p>
+                <div class="bg-stone p-8 rounded-xl shadow-lg text-left space-y-4">
+                    <p class="text-brown-medium">"Thật vi diệu thay, Tôn giả Gotama! ... Nay con quy y Tôn giả Gotama, quy y Pháp và quy y Tăng."</p>
+                    <p class="text-brown-medium">Sau khi xuất gia, Tôn giả Bharadvaja "sống độc cư, không phóng dật, nhiệt tâm tinh cần" và đã nhanh chóng chứng đắc quả vị A-la-hán.</p>
+                    <p class="font-semibold text-xl text-green-deep p-4 bg-green-100 rounded-lg">"Sanh đã tận, Phạm hạnh đã thành, những việc nên làm đã làm, không còn trở lui trạng thái này nữa."</p>
+                    <p class="text-brown-medium">Sự chuyển hóa của ông khẳng định rằng con đường thanh lọc nội tâm là một con đường thực tiễn, phổ quát và có thể đạt được kết quả tối hậu.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-stone mt-20">
+        <div class="container mx-auto px-6 py-8 text-center text-brown-medium">
+            <p>Một ứng dụng tương tác dựa trên Vatthūpama Sutta (Trung Bộ Kinh 7).</p>
+            <p class="mt-2 text-sm">Thiết kế để khám phá và chiêm nghiệm giáo pháp.</p>
+        </div>
+    </footer>
+    
+    <div id="defilement-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-3xl font-bold text-green-deep mb-4"></h3>
+            <p id="modal-description" class="text-lg text-brown-medium mb-6"></p>
+            <button id="modal-close" class="px-6 py-2 bg-green-accent text-white font-bold rounded-lg hover:bg-green-deep transition-colors">Đóng</button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const defilementsData = [
+                { name: "Tham dục, tà tham", description: "Lòng tham, sự ham muốn chiếm hữu những gì không phải của mình một cách bất chính." },
+                { name: "Sân", description: "Sự tức giận, lòng căm ghét, và ý muốn làm hại người khác. Đây là một trong ba độc tố gốc rễ." },
+                { name: "Phẫn", description: "Cơn giận dữ bùng nổ, không kiểm soát được, thường là biểu hiện bên ngoài của sân." },
+                { name: "Hận", description: "Sự oán hận dai dẳng, nuôi dưỡng ý định trả thù trong tâm trí một cách âm ỉ." },
+                { name: "Hư ngụy", description: "Sự giả dối, không chân thật, che đậy bản chất thật của mình để lừa dối người khác." },
+                { name: "Não hại", description: "Ý định độc ác muốn gây ra đau khổ, tổn thương cho chúng sanh khác." },
+                { name: "Tật đố", description: "Lòng ghen tị, bực tức trước thành công, tài sản, hay hạnh phúc của người khác." },
+                { name: "Xan tham", description: "Sự keo kiệt, bủn xỉn, không sẵn lòng chia sẻ vật chất hay kiến thức." },
+                { name: "Man trá", description: "Sự lừa dối, gian xảo, dùng mưu mẹo, thủ đoạn để lừa gạt người khác vì lợi ích cá nhân." },
+                { name: "Khi cuống", description: "Lời nói và hành động lừa gạt, xảo trá, phản bội lại lòng tin của người khác." },
+                { name: "Ngoan cố", description: "Sự bướng bỉnh, cứng đầu, cố chấp vào ý kiến sai lầm của mình, không chịu lắng nghe." },
+                { name: "Cấp tháo", description: "Hành vi vội vàng, hung hăng, và tâm lý tranh đua hơn thua với người khác." },
+                { name: "Mạn", description: "Sự kiêu ngạo, tự đề cao bản thân một cách thái quá, xem mình hơn người." },
+                { name: "Quá mạn", description: "Sự kiêu căng, tự phụ, ngạo mạn, coi thường người khác." },
+                { name: "Kiêu", description: "Say sưa trong thành công, tuổi trẻ, hay sức khỏe của mình, dẫn đến coi thường người khác." },
+                { name: "Phóng dật", description: "Trạng thái tâm buông thả, lơ là, thiếu chánh niệm. Đây là mảnh đất màu mỡ cho các cấu uế khác phát triển." }
+            ];
+
+            const grid = document.getElementById('defilements-grid');
+            const modal = document.getElementById('defilement-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDescription = document.getElementById('modal-description');
+            const modalClose = document.getElementById('modal-close');
+
+            defilementsData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'defilement-card bg-white p-4 rounded-lg shadow-sm border border-gray-100 text-center';
+                card.innerHTML = `<h4 class="font-semibold text-brown-dark">${item.name}</h4>`;
+                card.onclick = () => {
+                    modalTitle.textContent = item.name;
+                    modalDescription.textContent = item.description;
+                    modal.style.display = 'flex';
+                };
+                grid.appendChild(card);
+            });
+            
+            modalClose.onclick = () => {
+                modal.style.display = 'none';
+            };
+            
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            };
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.onclick = () => {
+                mobileMenu.classList.toggle('hidden');
+            };
+            
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+
+            const ctx = document.getElementById('fourImmeasurablesChart').getContext('2d');
+            const fourImmeasurablesChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Từ (Mettā)', 'Bi (Karuṇā)', 'Hỷ (Muditā)', 'Xả (Upekkhā)'],
+                    datasets: [{
+                        label: 'Tâm Vô Lượng',
+                        data: [10, 10, 10, 10],
+                        fill: true,
+                        backgroundColor: 'rgba(167, 201, 87, 0.2)',
+                        borderColor: 'rgb(106, 153, 78)',
+                        pointBackgroundColor: 'rgb(106, 153, 78)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(106, 153, 78)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 10,
+                            pointLabels: {
+                                font: {
+                                    size: 14,
+                                    family: "'Be Vietnam Pro', sans-serif"
+                                },
+                                color: '#5D4037'
+                            },
+                            ticks: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4 
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
